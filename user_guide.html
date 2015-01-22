@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation - jxrest</title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/uikit/2.15.0/css/uikit.min.css">
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/uikit/2.15.0/js/uikit.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
+<style>
+.nav-sub-1 {
+	margin-left: 20px;
+}
+
+.nav-sub-2 {
+	margin-left: 40px;
+}
+</style>
+<script>
+$(function () {
+	var page = location.pathname.substring(1);
+	if (page === '') {
+		page = 'index.html';
+	}
+	$('ul.uk-nav li a[href="' + page + '"]').parent().addClass('uk-active')
+});
+</script>
+</head>
+
+<body>
+	<div class="uk-container uk-container-center">
+		<div class="uk-grid">
+			<div class="uk-width-1-1">
+				<div style="height: 20px"></div>
+				<h1>
+					<img src="icon.png"> jxrest
+				</h1>
+				<h3>Really simple, lightweight REST framework in Java</h3>
+				<hr />
+			</div>
+		</div>
+		<div class="uk-grid">
+			<div class="uk-width-1-5">
+				<div class="uk-panel">
+					<ul class="uk-nav uk-nav-side uk-nav-parent-icon">
+						<li><a href="index.html">Overview</a></li>
+						<li><a href="installation.html">Installation</a></li>
+						<li><a href="user_guide.html">User Guide</a></li>
+						<li><a href="spring.html">Spring Integration</a></li>
+						<li><a href="apidocs/index.html" target="_blank">API Docs</a></li>
+						<li><a href="source_code.html">Source Code</a></li>
+						<li><a href="common_faqs.html">Common FAQs</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="uk-width-4-5">
+
+<!-- BEGIN CONTENT -->
+<h3>User Guide</h3>
+
+<p>jxrest only require a class that contains several methods to handle REST API.</p>
+
+<p>Suppose you have a <code>UserHandler</code> that handles user of query, creation, updating and deleting:</p>
+
+<pre><code>public class UserHandler {
+
+    long nextId = 0;
+    Map&lt;Long, User&gt; users = new ConcurrentHashMap&lt;Long, User&gt;();
+
+    long nextId() {
+        nextId ++;
+        return nextId;
+    }
+
+    @GET
+    @Path("/users")
+    Object getUsers() {
+        return users.values().toArray(new User[0]);
+    }
+
+    @GET
+    @Path("/users/:id")
+    public User getUser(long id) {
+        return users.get(id);
+    }
+
+    @PUT
+    @Path("/users")
+    User createUser(User user) {
+        user.id = nextId();
+        users.put(user.id, user);
+        return user;
+    }
+
+    @POST
+    @Path("/users/:id")
+    public User updateUser(long id, User user) {
+        User exist = users.get(id);
+        if (exist == null) {
+            throw new ApiException("entity:notfound", "User");
+        }
+        exist.name = user.name;
+        exist.email = user.email;
+        exist.password = user.password;
+        return exist;
+    }
+
+    @DELETE
+    @Path("/users/:id")
+    private boolean deleteUser(long id) {
+        User exist = users.remove(id);
+        return exist != null;
+    }
+}
+</code></pre>
+
+<p>And you want to use URL <code>/api/*</code> to handle all REST APIs. Here is an example of <code>web.xml</code>:</p>
+
+<pre><code>&lt;?xml version="1.0"?&gt;
+&lt;web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                             http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         id="SampleWebAppID"
+         version="3.0"&gt;
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;restApiServlet&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;com.itranswarp.jxrest.RestApiServlet&lt;/servlet-class&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;handlers&lt;/param-name&gt;
+            &lt;param-value&gt;your.UserHandler&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;urlPrefix&lt;/param-name&gt;
+            &lt;param-value&gt;/api&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        &lt;load-on-startup&gt;0&lt;/load-on-startup&gt;
+    &lt;/servlet&gt;
+
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;restApiServlet&lt;/servlet-name&gt;
+        &lt;url-pattern&gt;/api/*&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+&lt;/web-app&gt;
+</code></pre>
+
+<p>The built-in <code>com.itranswarp.jxrest.RestApiServlet</code> will handle all API request of <code>/api/*</code>. 
+Note that the <code>restApiServlet</code> has a configuration of <code>urlPrefix</code> with value <code>/api</code>, so a request 
+from client <code>POST http://localhost/api/users/123</code> will first match the servlet mapping <code>/api</code>, 
+and restApiServlet will remove the prefix <code>/api</code> and use the left <code>/users/123</code> to match the 
+<code>@Path</code> which defined by method <code>updateUser()</code>. So finally the <code>updateUser()</code> is invoked, and its 
+return value will be serialized as JSON response.</p>
+
+<p>You can define as many handlers as you wish, each handler is seperated by <code>,</code>:</p>
+
+<pre><code>&lt;init-param&gt;
+    &lt;param-name&gt;handlers&lt;/param-name&gt;
+    &lt;param-value&gt;your.UserHandler, your.BookHandler, your.other.handlers&lt;/param-value&gt;
+&lt;/init-param&gt;
+</code></pre>
+
+<p>Package name is also accepted and jxrest will scan the package to find all handlers automatically, 
+but sub-packages are not included.</p>
+
+<h3>Use Path Variables</h3>
+
+<p>Path variables are defined by pattern <code>:varName</code>, and jxrest tries to find the method variable with 
+the same name when invoke the method:</p>
+
+<pre><code>@GET
+@Path("/path/to/:groupId/:userId")
+Object find(String groupId, int userId) {
+    ...
+}
+</code></pre>
+
+<p>Primitive type (e.g. int) and its wrapper class (e.g. Integer) are allowed.</p>
+
+<h3>JSON Object</h3>
+
+<p>The method which handles a REST API can have one argument to accept a JSON object:</p>
+
+<pre><code>@POST
+@Path("/path/to/post/:id")
+Object update(int id, User user) {
+    ...
+}
+</code></pre>
+
+<p>jxrest tries to convert JSON to your defined type. You can use any standard JavaBean, or <code>Map&lt;String, Object&gt;</code>.</p>
+
+<p>NOTE: method with <code>@GET</code> cannot accept the JSON object.</p>
+
+<h3>Use Queries</h3>
+
+<p>It is convenient if the method can get query strings directly instead of calling <code>HttpServletRequest.getParameter()</code>. 
+jxrest allows you define an argument with type <code>Map&lt;String, String&gt;</code> and name <code>query</code>:</p>
+
+<pre><code>@GET
+@Path("/path/get/:groupId")
+Object findUsers(String groupId, Map&lt;String, String&gt; query) {
+    ...
+}
+</code></pre>
+
+<h3>Use HttpServletRequest and HttpServletResponse</h3>
+
+<p>If you want to access the HttpServletRequest and HttpServletResponse object, you can add arguments to 
+your method, just make sure the argument type is correct:</p>
+
+<pre><code>@GET
+@Path("/path/get/:groupId")
+Object findUsers(String groupId, HttpServletRequest req, HttpServletResponse resp) {
+    ...
+}
+</code></pre>
+
+<h3>Order of Arguments</h3>
+
+<p>jxrest can recognize your method and its arguments, but there is no order of the arguments required. 
+The following definition is OK:</p>
+
+<pre><code>@GET
+@Path("/path/get/:groupId")
+Object findUsers(HttpServletResponse resp, Map&lt;String, String&gt; query, String groupId, HttpServletRequest req) {
+    ...
+}
+</code></pre>
+
+<h3>Benifit</h3>
+
+<p>Using jxrest as JSON-based API framework is really great. Now you can concentrate on your business logic, and 
+you can test your business logic much easier. Your handler is just normal class. It is not depends on jxrest, it only 
+references a few annotations.</p>
+
+<p>Cool!</p>
+
+<!-- END CONTENT -->
+
+			</div>
+		</div>
+		<!-- footer -->
+		<div class="grid">
+			<div class="uk-width-1-1">
+				<hr />
+				<div class="uk-text-center">
+					<p>
+						<a href="https://github.com/michaelliao">Michael Liao</a> -
+						Copyright&copy;2015.
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
