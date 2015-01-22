@@ -1,6 +1,6 @@
 ### User Guide
 
-<div class="uk-alert uk-alert-danger">IMPORTANT: require JDK 1.8 or higher, and correct configuration.</div>
+<div class="uk-alert uk-alert-danger">IMPORTANT: require JDK 1.8 or higher, and correct configuration of compiler.</div>
 
 jxrest requires JDK 1.8 or higher, and your project MUST be compiled by JDK 1.8 or higher.
 
