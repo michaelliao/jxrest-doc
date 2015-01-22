@@ -1,5 +1,51 @@
 ### User Guide
 
+<div class="uk-alert uk-alert-danger">IMPORTANT: require JDK 1.8 or higher, and correct configuration.</div>
+
+jxrest requires JDK 1.8 or higher, and your project MUST be compiled by JDK 1.8 or higher.
+
+You MUST also set compiler options:
+
+If you use `javac` or Ant to compile your source code, make sure add `-parameters` to `javac`.
+
+If you use Maven to compile your source code, add following configurations to your `pom.xml`:
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    ...
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.2</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <compilerArgument>-parameters</compilerArgument>
+                </configuration>
+            </plugin>
+
+            ... other plugins
+
+        </plugins> 
+    </build>
+</project>
+```
+
+If you use Eclipse to compile your source code, make sure enable the option in Eclipse preferences:
+
+![Eclipse Config](eclipse-compiler.png)
+
+Make sure the option `Store information about method parameters (usable via reflection)` is checked.
+
+### Handle REST API
+
 jxrest only require a class that contains several methods to handle REST API.
 
 Suppose you have a `UserHandler` that handles user of query, creation, updating and deleting:
@@ -120,6 +166,8 @@ Object find(String groupId, int userId) {
     ...
 }
 ```
+
+Path varable name cannot have `_`, for it is a limitation of group name in regular express.
 
 Primitive type (e.g. int) and its wrapper class (e.g. Integer) are allowed.
 

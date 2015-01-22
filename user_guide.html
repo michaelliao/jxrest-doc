@@ -63,6 +63,51 @@ $(function () {
 <!-- BEGIN CONTENT -->
 <h3>User Guide</h3>
 
+<div class="uk-alert uk-alert-danger">IMPORTANT: require JDK 1.8 or higher, and correct configuration.</div>
+
+<p>jxrest requires JDK 1.8 or higher, and your project MUST be compiled by JDK 1.8 or higher.</p>
+
+<p>You MUST also set compiler options:</p>
+
+<p>If you use <code>javac</code> or Ant to compile your source code, make sure add <code>-parameters</code> to <code>javac</code>.</p>
+
+<p>If you use Maven to compile your source code, add following configurations to your <code>pom.xml</code>:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    ...
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.2&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;source&gt;1.8&lt;/source&gt;
+                    &lt;target&gt;1.8&lt;/target&gt;
+                    &lt;compilerArgument&gt;-parameters&lt;/compilerArgument&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+
+            ... other plugins
+
+        &lt;/plugins&gt; 
+    &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+
+<p>If you use Eclipse to compile your source code, make sure enable the option in Eclipse preferences:</p>
+
+<p><img src="eclipse-compiler.png" alt="Eclipse Config" /></p>
+
+<p>Make sure the option <code>Store information about method parameters (usable via reflection)</code> is checked.</p>
+
+<h3>Handle REST API</h3>
+
 <p>jxrest only require a class that contains several methods to handle REST API.</p>
 
 <p>Suppose you have a <code>UserHandler</code> that handles user of query, creation, updating and deleting:</p>
@@ -179,6 +224,8 @@ Object find(String groupId, int userId) {
     ...
 }
 </code></pre>
+
+<p>Path varable name cannot have <code>_</code>, for it is a limitation of group name in regular express.</p>
 
 <p>Primitive type (e.g. int) and its wrapper class (e.g. Integer) are allowed.</p>
 
